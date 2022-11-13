@@ -218,8 +218,8 @@ if (WEB)
     endif ()
     # HACK: Disable ASSERTIONS because there's assert on startup.
     # https://github.com/emscripten-core/emsdk/issues/1132
-    set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -sASSERTIONS=0 -Wno-warn-absolute-paths -Wno-unknown-warning-option")
-    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -sASSERTIONS=0 -Wno-warn-absolute-paths -Wno-unknown-warning-option")
+    set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-warn-absolute-paths -Wno-unknown-warning-option")
+    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-warn-absolute-paths -Wno-unknown-warning-option")
     if (URHO3D_THREADING)
         set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -s USE_PTHREADS=1")
         set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s USE_PTHREADS=1")
