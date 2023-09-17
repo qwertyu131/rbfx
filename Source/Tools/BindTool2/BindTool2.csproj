@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net7.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>10.0</LangVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="Program.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="ClangSharp" Version="16.0.0" />
+    <PackageReference Include="CppAst" Version="0.13.0" />
+    <PackageReference Include="libClangSharp" Version="16.0.6" />
+    <PackageReference Include="libClangSharp.runtime.win-x64" Version="16.0.6" />
+    <PackageReference Include="libClangSharp.runtime.win-x86" Version="16.0.6" />
+  </ItemGroup>
+
+</Project>

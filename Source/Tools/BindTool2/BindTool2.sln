@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.6.33829.357
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BindTool2", "BindTool2.csproj", "{2F9CCCB6-44A2-4350-BA46-5262EB38BE8B}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		MinSizeRel|Any CPU = MinSizeRel|Any CPU
+		Release|Any CPU = Release|Any CPU
+		RelWithDebInfo|Any CPU = RelWithDebInfo|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{2F9CCCB6-44A2-4350-BA46-5262EB38BE8B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2F9CCCB6-44A2-4350-BA46-5262EB38BE8B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2F9CCCB6-44A2-4350-BA46-5262EB38BE8B}.MinSizeRel|Any CPU.ActiveCfg = MinSizeRel|Any CPU
+		{2F9CCCB6-44A2-4350-BA46-5262EB38BE8B}.MinSizeRel|Any CPU.Build.0 = MinSizeRel|Any CPU
+		{2F9CCCB6-44A2-4350-BA46-5262EB38BE8B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2F9CCCB6-44A2-4350-BA46-5262EB38BE8B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2F9CCCB6-44A2-4350-BA46-5262EB38BE8B}.RelWithDebInfo|Any CPU.ActiveCfg = RelWithDebInfo|Any CPU
+		{2F9CCCB6-44A2-4350-BA46-5262EB38BE8B}.RelWithDebInfo|Any CPU.Build.0 = RelWithDebInfo|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {90C874D1-DF05-4434-8A72-DF49E0AA5AFA}
+	EndGlobalSection
+EndGlobal
