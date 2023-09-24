@@ -272,6 +272,13 @@ void IKTargetExtractor::ExtractAnimation(Animation* sourceAnimation, Animation* 
             track.track_->AddKeyFrame(frame);
         }
     }
+
+    const Matrix3x4& transform = sourceAnimation->GetMetadata(AnimationMetadata::IKTargetTransform).GetMatrix3x4();
+    for (ExtractedTrack& track : tracks)
+    {
+        for (AnimationKeyFrame& frame : track.track_->keyFrames_)
+            frame.position_ = transform * frame.position_;
+    }
 }
 
 } // namespace Urho3D
