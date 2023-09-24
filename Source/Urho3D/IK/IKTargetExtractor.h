@@ -51,12 +51,16 @@ private:
     ea::string GetNewFileName(const ea::string& fileName) const;
     ea::string GetModelName(Animation* sourceAnimation) const;
 
+    ea::string fileNameRegex_;
+
     bool extractRotations_{true};
     float sampleRate_{0.0f};
     bool extractToExistingFile_{true};
     bool extractToNewFile_{true};
     ea::string newFileName_{DefaultNewFileName};
     ResourceRef skeletonModel_{Model::GetTypeStatic()};
+    bool extractAllBones_{true};
+    StringVector targets_;
     StringVariantMap bendTargets_;
 };
 

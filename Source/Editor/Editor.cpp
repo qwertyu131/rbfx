@@ -100,7 +100,7 @@ Editor::Editor(Context* context)
     editorPluginManager_->AddPlugin("Assets.ModelImporter", &Assets_ModelImporter);
 
     editorPluginManager_->AddPlugin("Foundation.StandardFileTypes", &Foundation_StandardFileTypes);
-    editorPluginManager_->AddPlugin("Foundation.ConcurrentAssetProcessing", &Foundation_ConcurrentAssetProcessing);
+    //editorPluginManager_->AddPlugin("Foundation.ConcurrentAssetProcessing", &Foundation_ConcurrentAssetProcessing);
 
     editorPluginManager_->AddPlugin("Foundation.GameView", &Foundation_GameViewTab);
     editorPluginManager_->AddPlugin("Foundation.SceneView", &Foundation_SceneViewTab);

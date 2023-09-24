@@ -118,6 +118,23 @@ AnimationTrack* GetRootAnimationTrack(Animation& animation)
     return rootTracks.size() == 1 ? animation.GetTrack(rootTracks.front()) : nullptr;
 }
 
+bool IsChildTrack(const ea::string& track, const ea::string& parentTrack, const StringVariantMap& childToParent)
+{
+    const ea::string* currentTrack = &track;
+    while (currentTrack)
+    {
+        if (*currentTrack == parentTrack)
+            return true;
+
+        const auto parentTrackIter = childToParent.find(*currentTrack);
+        if (parentTrackIter == childToParent.end())
+            return false;
+
+        currentTrack = &parentTrackIter->second.GetString();
+    }
+    return false;
+}
+
 } // namespace
 
 void Assets_ModelImporter(Context* context, Project* project)
@@ -129,6 +146,15 @@ void Assets_ModelImporter(Context* context, Project* project)
 void ModelImporter::ResetRootMotionInfo::SerializeInBlock(Archive& archive)
 {
     SerializeOptionalValue(archive, "factor", factor_);
+    SerializeOptionalValue(archive, "positionWeight", positionWeight_);
+    SerializeOptionalValue(archive, "rotationSwingWeight", rotationSwingWeight_);
+    SerializeOptionalValue(archive, "rotationTwistWeight", rotationTwistWeight_);
+    SerializeOptionalValue(archive, "scaleWeight", scaleWeight_);
+}
+
+void ModelImporter::TrackFilterInfo::SerializeInBlock(Archive& archive)
+{
+    SerializeOptionalValue(archive, "removeRecursive", removeRecursive_);
 }
 
 void ModelImporter::ModelMetadata::SerializeInBlock(Archive& archive)
@@ -142,6 +168,7 @@ void ModelImporter::ModelMetadata::SerializeInBlock(Archive& archive)
         {
             const auto block = archive.OpenUnorderedBlock(name);
             SerializeOptionalValue(archive, "resetRootMotion", resetRootMotion_);
+            SerializeOptionalValue(archive, "filterTracks", filterTracks_);
         });
 }
 
@@ -325,6 +352,10 @@ void ModelImporter::OnAnimationLoaded(Animation& animation)
     if (resetRootMotionIter != currentMetadata_->resetRootMotion_.end())
         ResetRootMotion(animation, resetRootMotionIter->second);
 
+    const auto filterTracksIter = currentMetadata_->filterTracks_.find(animation.GetAnimationName());
+    if (filterTracksIter != currentMetadata_->filterTracks_.end())
+        FilterTracks(animation, filterTracksIter->second);
+
     const bool isAnimationLooped = IsAnimationLooped(animation);
     const auto frameStep = GetFrameStep(animation);
 
@@ -361,6 +392,21 @@ void ModelImporter::ResetRootMotion(Animation& animation, const ResetRootMotionI
     if (firstFrame.time_ == lastFrame.time_)
         return;
 
+    // Copy the track
+    const ea::string originalTrackName = rootTrack->name_ + "_Original";
+    if (animation.GetTrack(originalTrackName))
+    {
+        URHO3D_LOGWARNING("Cannot create backup track '{}' for root motion, skipping", originalTrackName);
+        return;
+    }
+
+    animation.AddMetadata(AnimationMetadata::RootTrack, rootTrack->name_);
+    animation.AddMetadata(AnimationMetadata::OriginalRootTrack, originalTrackName);
+
+    AnimationTrack* originalRootTrack = animation.CreateTrack(originalTrackName);
+    originalRootTrack->channelMask_ = rootTrack->channelMask_;
+    originalRootTrack->keyFrames_ = rootTrack->keyFrames_;
+
     // Calculate approximate velocity
     const Vector3 positionDelta = lastFrame.position_ - firstFrame.position_;
     const Quaternion rotationDelta = lastFrame.rotation_ * firstFrame.rotation_.Inverse();
@@ -374,14 +420,46 @@ void ModelImporter::ResetRootMotion(Animation& animation, const ResetRootMotionI
     animation.AddMetadata(AnimationMetadata::RootAngularVelocity, angularVelocity);
     animation.AddMetadata(AnimationMetadata::RootScaleVelocity, scaleVelocity);
 
-    // Reset root animation frames
-    const float sampleTime = Lerp(firstFrame.time_, lastFrame.time_, info.factor_);
+    // Calculate the reset transform
+    const float resetTime = Lerp(firstFrame.time_, lastFrame.time_, info.factor_);
     unsigned frameIndex{};
     Transform resetTransform;
-    rootTrack->Sample(sampleTime, lastFrame.time_, false, frameIndex, resetTransform);
+    rootTrack->Sample(resetTime, lastFrame.time_, false, frameIndex, resetTransform);
 
     for (AnimationKeyFrame& frame : rootTrack->keyFrames_)
-        static_cast<Transform&>(frame) = resetTransform;
+    {
+        const Transform interpolatedTransform = firstFrame.Lerp(lastFrame, frame.time_);
+        const Transform deltaTransform = frame * interpolatedTransform.Inverse();
+        const Transform filteredTransform = deltaTransform * resetTransform;
+
+        const auto [deltaSwing, deltaTwist] = filteredTransform.rotation_.ToSwingTwist(rotationDelta.Axis());
+
+        frame.position_ = VectorLerp(resetTransform.position_, filteredTransform.position_, info.positionWeight_);
+        frame.rotation_ = Quaternion::IDENTITY.Slerp(deltaSwing, info.rotationSwingWeight_)
+            * Quaternion::IDENTITY.Slerp(deltaTwist, info.rotationTwistWeight_) * resetTransform.rotation_;
+        frame.scale_ = Lerp(resetTransform.scale_, filteredTransform.scale_, info.scaleWeight_);
+    }
+}
+
+void ModelImporter::FilterTracks(Animation& animation, const TrackFilterInfo& info)
+{
+    const StringVariantMap& childToParent = animation.GetMetadata(AnimationMetadata::ParentTracks).GetStringVariantMap();
+
+    ea::unordered_set<ea::string> tracksToRemove;
+    for (const auto& [_, track] : animation.GetTracks())
+    {
+        for (const ea::string& parentTrack : info.removeRecursive_)
+        {
+            if (IsChildTrack(track.name_, parentTrack, childToParent))
+            {
+                tracksToRemove.insert(track.name_);
+                break;
+            }
+        }
+    }
+
+    for (const ea::string& trackName : tracksToRemove)
+        animation.RemoveTrack(trackName);
 }
 
 ModelImporter::ModelMetadata ModelImporter::LoadMetadata(const ea::string& fileName) const

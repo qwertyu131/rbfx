@@ -30,6 +30,8 @@
 #include "Urho3D/Resource/ResourceCache.h"
 #include "Urho3D/Scene/Scene.h"
 
+#include <regex>
+
 namespace Urho3D
 {
 
@@ -44,7 +46,8 @@ struct ExtractedTrack
     Quaternion rotationOffset_;
 };
 
-ea::vector<ExtractedTrack> GetTracks(AnimatedModel* animatedModel, Animation* destAnimation, bool includeRotations)
+ea::vector<ExtractedTrack> GetTracks(AnimatedModel* animatedModel, Animation* destAnimation, bool includeRotations,
+    bool extractAllBones, const StringVector& targets)
 {
     Skeleton& skeleton = animatedModel->GetSkeleton();
     const unsigned numBones = skeleton.GetNumBones();
@@ -54,6 +57,9 @@ ea::vector<ExtractedTrack> GetTracks(AnimatedModel* animatedModel, Animation* de
     {
         const Bone& bone = skeleton.GetBones()[i];
         if (!bone.node_)
+            continue;
+
+        if (!extractAllBones && !targets.contains(bone.name_))
             continue;
 
         const ea::string trackName = bone.name_ + "_Target";
@@ -138,12 +144,17 @@ void IKTargetExtractor::RegisterObject(Context* context)
 {
     context->RegisterFactory<IKTargetExtractor>(Category_Transformer);
 
+    URHO3D_ATTRIBUTE("File Name Regex", ea::string, fileNameRegex_, EMPTY_STRING, AM_DEFAULT);
+
     URHO3D_ATTRIBUTE("Extract Rotations", bool, extractRotations_, true, AM_DEFAULT);
     URHO3D_ATTRIBUTE("Sample Rate", float, sampleRate_, 0.0f, AM_DEFAULT);
     URHO3D_ATTRIBUTE("Extract to Existing File", bool, extractToExistingFile_, true, AM_DEFAULT);
     URHO3D_ATTRIBUTE("Extract to New File", bool, extractToNewFile_, true, AM_DEFAULT);
     URHO3D_ATTRIBUTE("New File Name", ea::string, newFileName_, DefaultNewFileName, AM_DEFAULT);
     URHO3D_ATTRIBUTE("Model", ResourceRef, skeletonModel_, ResourceRef(Model::GetTypeStatic()), AM_DEFAULT);
+
+    URHO3D_ATTRIBUTE("Extract All Bones", bool, extractAllBones_, true, AM_DEFAULT);
+    URHO3D_ATTRIBUTE("Targets", StringVector, targets_, Variant::emptyStringVector, AM_DEFAULT);
     URHO3D_ATTRIBUTE("Bend Targets", StringVariantMap, bendTargets_, Variant::emptyStringVariantMap, AM_DEFAULT);
 }
 
@@ -236,7 +247,8 @@ void IKTargetExtractor::ExtractAnimation(Animation* sourceAnimation, Animation* 
     animatedModel->SetModel(model);
     animatedModel->ApplyAnimation();
 
-    ea::vector<ExtractedTrack> tracks = GetTracks(animatedModel, destAnimation, extractRotations_);
+    ea::vector<ExtractedTrack> tracks =
+        GetTracks(animatedModel, destAnimation, extractRotations_, extractAllBones_, targets_);
     tracks.append(GetBendTracks(animatedModel, destAnimation, bendTargets_));
 
     auto animationController = node->CreateComponent<AnimationController>();

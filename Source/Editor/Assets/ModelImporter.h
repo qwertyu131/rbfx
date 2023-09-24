@@ -52,6 +52,17 @@ protected:
     struct ResetRootMotionInfo
     {
         float factor_{};
+        Vector3 positionWeight_{};
+        float rotationSwingWeight_{};
+        float rotationTwistWeight_{};
+        float scaleWeight_{};
+
+        void SerializeInBlock(Archive& archive);
+    };
+
+    struct TrackFilterInfo
+    {
+        ea::unordered_set<ea::string> removeRecursive_;
 
         void SerializeInBlock(Archive& archive);
     };
@@ -62,6 +73,7 @@ protected:
         StringVector appendFiles_;
         ea::unordered_map<ea::string, ea::string> nodeRenames_;
         ea::unordered_map<ea::string, ResetRootMotionInfo> resetRootMotion_;
+        ea::unordered_map<ea::string, TrackFilterInfo> filterTracks_;
 
         void SerializeInBlock(Archive& archive);
     };
@@ -75,6 +87,7 @@ protected:
     /// Tweaks.
     /// @{
     void ResetRootMotion(Animation& animation, const ResetRootMotionInfo& info);
+    void FilterTracks(Animation& animation, const TrackFilterInfo& info);
     /// @}
 
 private:
